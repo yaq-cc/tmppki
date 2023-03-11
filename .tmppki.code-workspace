@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": ".",
+			"name": "tmppki"
+		},
+		{
+			"path": "../../",
+			"name": "github.com: Project References"
+		},
+		{
+			"path": "../../../go-patterns",
+			"name": "Reference Go Patterns"
+		}
+	],
+	"settings": {
+		"gopls": {
+			"build.directoryFilters": [
+				"-../../",
+				"+tmppki"
+			]
+		}
+	}
+}
