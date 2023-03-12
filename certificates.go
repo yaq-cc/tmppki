@@ -19,10 +19,11 @@ func DefaultCertTemplate() *x509.Certificate {
 		Subject: pkix.Name{
 			CommonName: "Temporary PKI Certificate",
 		},
-		NotBefore:    now,
-		NotAfter:     now.AddDate(1, 0, 0),
-		KeyUsage:     x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
+		NotBefore:   now,
+		NotAfter:    now.AddDate(1, 0, 0),
+		KeyUsage:    x509.KeyUsageDigitalSignature,
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
+		DNSNames:    []string{"localhost", "127.0.0.1", "127.0.0.2"},
 	}
 	return cert
 }
