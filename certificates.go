@@ -26,7 +26,9 @@ func DefaultCertTemplate() *x509.Certificate {
 
 func DefaultCATemplate() *x509.Certificate {
 	tmpl := DefaultCertTemplate()
-	tmpl.Subject = pkix.Name{}
+	tmpl.Subject = pkix.Name{
+		CommonName: "Temporary PKI",
+	}
 	tmpl.IsCA = true
 	tmpl.KeyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign
 	tmpl.BasicConstraintsValid = true
@@ -41,7 +43,7 @@ type Certificate struct {
 	creator func(c *Certificate) error
 	key     *Key
 	der     []byte
-	cert 	*x509.Certificate
+	cert    *x509.Certificate
 }
 
 func (c Certificate) Key() *Key {
