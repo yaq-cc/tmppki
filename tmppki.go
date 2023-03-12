@@ -73,16 +73,32 @@ func (t TemporaryPKI) KeyPath() string {
 	return string(t.keyPath)
 }
 
+func (t *TemporaryPKI) SetKeyPath(path string) {
+	t.keyPath = Path(path)
+}
+
 func (t TemporaryPKI) CertPath() string {
 	return string(t.certPath)
+}
+
+func (t *TemporaryPKI) SetCertPath(path string) {
+	t.certPath = Path(path)
 }
 
 func (t TemporaryPKI) CAKeyPath() string {
 	return string(t.caKeyPath)
 }
 
+func (t *TemporaryPKI) SetCAKeyPath(path string) {
+	t.caKeyPath = Path(path)
+}
+
 func (t TemporaryPKI) CACertPath() string {
 	return string(t.caCertPath)
+}
+
+func (t *TemporaryPKI) SetCACertPath(path string) {
+	t.caCertPath = Path(path)
 }
 
 func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
