@@ -16,6 +16,9 @@ func DefaultCertTemplate() *x509.Certificate {
 	now := time.Now()
 	cert := &x509.Certificate{
 		SerialNumber: RandomBigInt(),
+		Subject: pkix.Name{
+			CommonName: "Temporary PKI Certificate",
+		},
 		NotBefore:    now,
 		NotAfter:     now.AddDate(1, 0, 0),
 		KeyUsage:     x509.KeyUsageDigitalSignature,
@@ -27,7 +30,7 @@ func DefaultCertTemplate() *x509.Certificate {
 func DefaultCATemplate() *x509.Certificate {
 	tmpl := DefaultCertTemplate()
 	tmpl.Subject = pkix.Name{
-		CommonName: "Temporary PKI",
+		CommonName: "Temporary PKI Certificate Authority",
 	}
 	tmpl.IsCA = true
 	tmpl.KeyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign
