@@ -33,11 +33,12 @@ func (f Path) Pattern() string {
 }
 
 type TemporaryPKI struct {
-	key      *Key
-	cert     *Certificate
-	keyPath  Path
-	certPath Path
-	ready    bool
+	key        *Key
+	cert       *Certificate
+	keyPath    Path
+	certPath   Path
+	caCertPath Path
+	ready      bool
 }
 
 func NewTemporaryPKI(alg Algorithm, str *SecurityStrength, tmpl *x509.Certificate) (*TemporaryPKI, error) {
@@ -50,6 +51,7 @@ func NewTemporaryPKI(alg Algorithm, str *SecurityStrength, tmpl *x509.Certificat
 	tmppki.cert = key.Certificate(tmpl)
 	tmppki.keyPath = "/tmp/server.key"
 	tmppki.certPath = "/tmp/server.crt"
+	tmppki.caCertPath = "/etc/ssl/certs/tmppki.crt"
 	tmppki.ready = false
 	return tmppki, nil
 }
@@ -62,6 +64,10 @@ func (t TemporaryPKI) CertPath() string {
 	return string(t.certPath)
 }
 
+func (t TemporaryPKI) CACertPath() string {
+	return string(t.caCertPath)
+} 
+
 func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
 	tmpKeyfile, err := os.CreateTemp(t.keyPath.Dir(), t.keyPath.Pattern())
 	if err != nil {
@@ -72,12 +78,23 @@ func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
 	if err != nil {
 		return nil, err
 	}
+	
 	tmpCertfile, err := os.CreateTemp(t.certPath.Dir(), t.certPath.Pattern())
 	if err != nil {
 		return nil, err
 	}
 	t.certPath = Path(tmpCertfile.Name())
-	t.cert.EncodePEM(tmpCertfile)
+	err = t.cert.EncodePEM(tmpCertfile)
+	if err != nil {
+		return nil, err
+	}
+
+	tmpCaCertfile, err := os.CreateTemp(t.caCertPath.Dir(), t.caCertPath.Pattern())
+	if err != nil {
+		return nil, err
+	}
+	t.caCertPath = Path(tmpCaCertfile.Name())
+	err = t.cert.EncodePEM(tmpCaCertfile)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +105,10 @@ func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
 			return err
 		}
 		err = os.Remove(t.CertPath())
+		if err != nil {
+			return err
+		}
+		err = os.Remove(t.CACertPath())
 		if err != nil {
 			return err
 		}
