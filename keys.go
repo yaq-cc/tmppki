@@ -216,13 +216,23 @@ func (k Key) EncodePEM(w io.WriteCloser) error {
 	return nil
 }
 
-func (k *Key) Certificate(tmpl *x509.Certificate) *Certificate {
+
+func (k *Key) Certificate(tmpl *x509.Certificate, parent *x509.Certificate, parentKey *Key) *Certificate {
 	if tmpl == nil {
 		tmpl = DefaultCertTemplate()
 	}
 
+	if parent == nil {
+		parent = tmpl
+	}
+
+	if parentKey == nil {
+		parentKey = k
+	}
+
 	creator := func(cert *Certificate) error {
-		DER, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, k.Public(), k.Private())
+
+		DER, err := x509.CreateCertificate(rand.Reader, tmpl, parent, k.Public(), parentKey.Private())
 		if err != nil {
 			return err
 		}

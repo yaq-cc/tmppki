@@ -3,6 +3,7 @@ package tmppki
 import (
 	"crypto/rand"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/pem"
 	"io"
 	"math/big"
@@ -18,9 +19,18 @@ func DefaultCertTemplate() *x509.Certificate {
 		NotBefore:    now,
 		NotAfter:     now.AddDate(1, 0, 0),
 		KeyUsage:     x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 	}
 	return cert
+}
+
+func DefaultCATemplate() *x509.Certificate {
+	tmpl := DefaultCertTemplate()
+	tmpl.Subject = pkix.Name{}
+	tmpl.IsCA = true
+	tmpl.KeyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign
+	tmpl.BasicConstraintsValid = true
+	return tmpl
 }
 
 var CertificatePEMHeader = "CERTIFICATE"
@@ -31,6 +41,7 @@ type Certificate struct {
 	creator func(c *Certificate) error
 	key     *Key
 	der     []byte
+	cert 	*x509.Certificate
 }
 
 func (c Certificate) Key() *Key {
@@ -43,6 +54,10 @@ func (c Certificate) Private() PrivateKey {
 
 func (c Certificate) Public() PublicKey {
 	return c.key.priv.Public()
+}
+
+func (c Certificate) Certificate() *x509.Certificate {
+	return c.cert
 }
 
 func (c *Certificate) MarshalDER() ([]byte, error) {

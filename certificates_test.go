@@ -7,7 +7,7 @@ func testGenerateCertificateX(t *testing.T, alg Algorithm, str *SecurityStrength
 	if err != nil {
 		t.Fatal(err)
 	}
-	cert := key.Certificate(nil)
+	cert := key.Certificate(nil, nil, nil)
 	DER, err := cert.MarshalPEM()
 	if err != nil {
 		t.Fatal(err)

@@ -35,23 +35,36 @@ func (f Path) Pattern() string {
 type TemporaryPKI struct {
 	key        *Key
 	cert       *Certificate
+	caKey      *Key
+	caCert     *Certificate
 	keyPath    Path
 	certPath   Path
+	caKeyPath  Path
 	caCertPath Path
 	ready      bool
 }
 
 func NewTemporaryPKI(alg Algorithm, str *SecurityStrength, tmpl *x509.Certificate) (*TemporaryPKI, error) {
 	tmppki := &TemporaryPKI{}
+	caKey, err := RSA.GenerateKey(S160)
+	if err != nil {
+		return nil, err
+	}
+	caTmpl := DefaultCATemplate()
+	caCert := caKey.Certificate(caTmpl, nil, nil)
 	key, err := alg.GenerateKey(str)
 	if err != nil {
 		return nil, err
 	}
+
 	tmppki.key = key
-	tmppki.cert = key.Certificate(tmpl)
+	tmppki.cert = key.Certificate(nil, caTmpl, caKey)
+	tmppki.caKey = caKey
+	tmppki.caCert = caCert
 	tmppki.keyPath = "/tmp/server.key"
 	tmppki.certPath = "/tmp/server.crt"
-	tmppki.caCertPath = "/etc/ssl/certs/tmppki.crt"
+	tmppki.caKeyPath = "/tmp/tmppki-ca.key"
+	tmppki.caCertPath = "/tmp/tmppki-ca.crt"
 	tmppki.ready = false
 	return tmppki, nil
 }
@@ -64,9 +77,13 @@ func (t TemporaryPKI) CertPath() string {
 	return string(t.certPath)
 }
 
+func (t TemporaryPKI) CAKeyPath() string {
+	return string(t.caKeyPath)
+}
+
 func (t TemporaryPKI) CACertPath() string {
 	return string(t.caCertPath)
-} 
+}
 
 func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
 	tmpKeyfile, err := os.CreateTemp(t.keyPath.Dir(), t.keyPath.Pattern())
@@ -78,7 +95,7 @@ func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	tmpCertfile, err := os.CreateTemp(t.certPath.Dir(), t.certPath.Pattern())
 	if err != nil {
 		return nil, err
@@ -112,6 +129,7 @@ func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
 		if err != nil {
 			return err
 		}
+
 		return nil
 	}
 
