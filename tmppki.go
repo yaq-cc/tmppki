@@ -102,32 +102,92 @@ func (t *TemporaryPKI) SetCACertPath(path string) {
 }
 
 func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
-	tmpKeyfile, err := os.CreateTemp(t.keyPath.Dir(), t.keyPath.Pattern())
+	caCertPath := t.CACertPath()
+	keyPath := t.KeyPath()
+	certPath := t.CertPath()
+
+	tmpCACertfile, err := os.Open(caCertPath)
 	if err != nil {
 		return nil, err
 	}
-	t.keyPath = Path(tmpKeyfile.Name())
+	err = t.cert.EncodePEM(tmpCACertfile)
+	if err != nil {
+		return nil, err
+	}
+
+
+	tmpKeyfile, err := os.Open(keyPath)
+	if err != nil {
+		return nil, err
+	}
 	err = t.key.EncodePEM(tmpKeyfile)
 	if err != nil {
 		return nil, err
 	}
 
-	tmpCertfile, err := os.CreateTemp(t.certPath.Dir(), t.certPath.Pattern())
+	tmpCertfile, err := os.Open(certPath)
 	if err != nil {
 		return nil, err
 	}
-	t.certPath = Path(tmpCertfile.Name())
 	err = t.cert.EncodePEM(tmpCertfile)
 	if err != nil {
 		return nil, err
 	}
 
-	tmpCaCertfile, err := os.CreateTemp(t.caCertPath.Dir(), t.caCertPath.Pattern())
+
+	remover := func() error {
+		err := os.Remove(caCertPath)
+		if err != nil {
+			return err
+		}
+
+		err = os.Remove(keyPath)
+		if err != nil {
+			return err
+		}
+		err = os.Remove(certPath)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	t.ready = true
+	return remover, nil
+}
+
+func (t *TemporaryPKI) GenerateTmpPKI() (func() error, error) {
+	caCertPath := Path("/tmp/ca-cert-*.crt")
+	keyPath := Path("/tmp/server-*.key")
+	certPath := Path("/tmp/server-*.crt")
+
+
+	tmpCACertFile, err := os.CreateTemp(caCertPath.Dir(), caCertPath.Pattern())
 	if err != nil {
 		return nil, err
 	}
-	t.caCertPath = Path(tmpCaCertfile.Name())
-	err = t.cert.EncodePEM(tmpCaCertfile)
+	t.keyPath = Path(tmpCACertFile.Name())
+	err = t.key.EncodePEM(tmpCACertFile)
+	if err != nil {
+		return nil, err
+	}
+
+	tmpKeyFile, err := os.CreateTemp(keyPath.Dir(), keyPath.Pattern())
+	if err != nil {
+		return nil, err
+	}
+	t.certPath = Path(tmpKeyFile.Name())
+	err = t.cert.EncodePEM(tmpKeyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	tmpCertFile, err := os.CreateTemp(certPath.Dir(), certPath.Pattern())
+	if err != nil {
+		return nil, err
+	}
+	t.caCertPath = Path(tmpCertFile.Name())
+	err = t.cert.EncodePEM(tmpCertFile)
 	if err != nil {
 		return nil, err
 	}
