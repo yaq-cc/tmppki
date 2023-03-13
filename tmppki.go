@@ -106,7 +106,7 @@ func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
 	keyPath := t.KeyPath()
 	certPath := t.CertPath()
 
-	tmpCACertfile, err := os.Open(caCertPath)
+	tmpCACertfile, err := os.Create(caCertPath)
 	if err != nil {
 		return nil, err
 	}
@@ -115,8 +115,7 @@ func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
 		return nil, err
 	}
 
-
-	tmpKeyfile, err := os.Open(keyPath)
+	tmpKeyfile, err := os.Create(keyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +124,7 @@ func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
 		return nil, err
 	}
 
-	tmpCertfile, err := os.Open(certPath)
+	tmpCertfile, err := os.Create(certPath)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +132,6 @@ func (t *TemporaryPKI) GeneratePKI() (func() error, error) {
 	if err != nil {
 		return nil, err
 	}
-
 
 	remover := func() error {
 		err := os.Remove(caCertPath)
@@ -160,7 +158,6 @@ func (t *TemporaryPKI) GenerateTmpPKI() (func() error, error) {
 	caCertPath := Path("/tmp/ca-cert-*.crt")
 	keyPath := Path("/tmp/server-*.key")
 	certPath := Path("/tmp/server-*.crt")
-
 
 	tmpCACertFile, err := os.CreateTemp(caCertPath.Dir(), caCertPath.Pattern())
 	if err != nil {
